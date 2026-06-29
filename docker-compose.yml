@@ -1,0 +1,57 @@
+services:
+  frontend:
+    build: ../frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - core
+
+  core:
+    build: ../core
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/texts_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+
+  worker:
+    build: ../worker
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/texts_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: texts_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:4.3.2-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+volumes:
+  postgres-data:
